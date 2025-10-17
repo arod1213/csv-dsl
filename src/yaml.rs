@@ -11,6 +11,7 @@ pub enum DataType {
     Uint,
     String,
     Bool,
+    Date,
 }
 
 #[derive(Debug, Deserialize, Clone)]

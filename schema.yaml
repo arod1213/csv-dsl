@@ -4,7 +4,15 @@
   type: String
 
 - name: earnings
-  aliases: [ "USD Amount", "$ Amount", "Amount", "Dollars", "amount_received", "Earnings (USD)", "Distributed Amount", "Your Payment Amount" ]
+  aliases: 
+  - USD Amount
+  - $ Amount
+  - Amount
+  - Dollars
+  - amount_received
+  - Earnings (USD)
+  - Distributed Amount
+  - Your Payment Amount
   optional: false
   type: Float
 
