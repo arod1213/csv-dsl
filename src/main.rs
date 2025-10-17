@@ -4,7 +4,6 @@ use std::{fs::File, io::BufReader};
 
 mod cli;
 mod csv;
-mod date;
 mod read;
 mod utils;
 mod yaml;

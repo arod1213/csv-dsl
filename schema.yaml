@@ -16,6 +16,13 @@
   optional: false
   type: Float
 
+- name: date
+  aliases:
+    - Distribution Date
+    - Transaction Date
+  type: Date
+  optional: true
+
 - name: artist
   aliases: [ "Performing Artist", "Artist", "Recording Display Artist Name", "Artist Name" ]
   optional: true

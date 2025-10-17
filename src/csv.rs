@@ -14,6 +14,20 @@ pub fn collect_fields(line: &str, sep: &str) -> Vec<String> {
 
 fn validate_field(field: &str, spec: &FieldSpec) -> Option<Value> {
     match spec.r#type {
+        // TODO: provide a more robust format to parse by (01-01-01) would fail atm
+        DataType::Date => {
+            let fixed = field.replace("-", "/");
+            let date = match dateparser::parse(&fixed) {
+                Ok(x) => x,
+                Err(_) => {
+                    if spec.optional {
+                        return Some(Value::Null);
+                    }
+                    return None;
+                }
+            };
+            return Some(Value::String(date.to_string()));
+        }
         DataType::String => {
             if spec.optional && field == "" {
                 return Some(Value::Null);
