@@ -5,12 +5,20 @@ use serde::Deserialize;
 use crate::read::get_path;
 
 #[derive(Debug, Deserialize, Clone)]
+pub enum DataType {
+    Float,
+    Int,
+    Uint,
+    String,
+    Bool,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct FieldSpec {
     pub name: String,
 
-    #[serde(default)]
-    pub r#type: String,
+    pub r#type: DataType,
 
     #[serde(default)]
     pub optional: bool,
