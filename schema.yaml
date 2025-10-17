@@ -61,4 +61,4 @@
   aliases:
    - Territory
   optional: true
-  type: String
+  type: Country

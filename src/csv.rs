@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde_json::{Map, Number, Value};
 
 use crate::{
+    country::parse_country_code,
     utils::clean_line,
     yaml::{DataType, FieldSpec},
 };
@@ -14,6 +15,10 @@ pub fn collect_fields(line: &str, sep: &str) -> Vec<String> {
 
 fn validate_field(field: &str, spec: &FieldSpec) -> Option<Value> {
     match spec.r#type {
+        DataType::Country => {
+            let country_name = parse_country_code(field);
+            return Some(Value::String(country_name));
+        }
         // TODO: provide a more robust format to parse by (01-01-01) would fail atm
         DataType::Date => {
             let fixed = field.replace("-", "/");

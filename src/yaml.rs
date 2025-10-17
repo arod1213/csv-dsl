@@ -12,6 +12,7 @@ pub enum DataType {
     String,
     Bool,
     Date,
+    Country,
 }
 
 #[derive(Debug, Deserialize, Clone)]

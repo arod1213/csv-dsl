@@ -3,6 +3,7 @@ use serde_json::Value;
 use std::{fs::File, io::BufReader};
 
 mod cli;
+mod country;
 mod csv;
 mod read;
 mod utils;
