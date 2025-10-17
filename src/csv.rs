@@ -14,7 +14,7 @@ pub fn collect_fields(line: &str, sep: &str) -> Vec<String> {
 
 fn validate_field(field: &str, spec: &FieldSpec) -> Option<Value> {
     match spec.r#type {
-        DataType::String => {
+        DataType::string => {
             if spec.optional && field == "" {
                 return Some(Value::Null);
             }

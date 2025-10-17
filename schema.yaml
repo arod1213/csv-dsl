@@ -1,23 +1,29 @@
 - name: title
-  aliases: [ "Work Title", "Title" ]
+  aliases: [ "Work Title", "Title", "song_name", "Work Primary Title", "Track Name" ]
   optional: false
   type: String
 
 - name: earnings
-  aliases: [ "USD Amount", "$ Amount", "Amount", "Dollars" ]
+  aliases: [ "USD Amount", "$ Amount", "Amount", "Dollars", "amount_received", "Earnings (USD)", "Distributed Amount", "Your Payment Amount" ]
   optional: false
   type: Float
 
 - name: artist
-  aliases: [ "Performing Artist", "Artist" ]
+  aliases: [ "Performing Artist", "Artist", "Recording Display Artist Name", "Artist Name" ]
+  optional: true
   type: String
 
 - name: isrc
   aliases: [ "ISRC" ]
   type: String
 
+- name: iswc
+  aliases: [ "iswc", "ISWC" ]
+  optional: true
+  type: String
+
 - name: upc
-  aliases: [ "UPC", "Album UPC" ]
+  aliases: [ "UPC", "Album UPC", "Release UPC" ]
   optional: true
   type: Uint
 
