@@ -11,7 +11,7 @@ mod utils;
 use crate::{
     cli::Args,
     parse::{
-        csv::{collect_fields, csv_line_to_payment},
+        csv::{ParseError, collect_fields, csv_line_to_payment},
         yaml::yaml_schema,
     },
     read::{get_path, read_line},
@@ -34,15 +34,28 @@ fn main() {
 
         let mut statements: Vec<Value> = vec![];
         let yaml_schema = yaml_schema(&args.schema);
+
+        let mut line_num: usize = 0;
         loop {
             let line = match read_line(&mut reader) {
                 Some(s) => s,
                 None => break,
             };
             let obj = match csv_line_to_payment(&line, &args.separator, &headers, &yaml_schema) {
-                Some(x) => x,
-                None => continue,
+                Ok(x) => x,
+                Err(e) => {
+                    if args.strict {
+                        match e {
+                            ParseError::BadField(s) => {
+                                panic!("bad field in {:?} at {}: {:?}", name, line_num, s);
+                            } // _ => panic!("{:?}", e),
+                        }
+                    }
+                    line_num += 1;
+                    continue;
+                }
             };
+            line_num += 1;
             statements.push(obj);
         }
         let json = Value::from(statements);

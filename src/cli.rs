@@ -10,4 +10,7 @@ pub struct Args {
 
     #[arg(long)]
     pub schema: String,
+
+    #[arg(long)]
+    pub strict: bool,
 }

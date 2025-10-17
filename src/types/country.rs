@@ -55,4 +55,3 @@ pub fn parse_country_code(code: &str) -> String {
     };
     country.to_string()
 }
-

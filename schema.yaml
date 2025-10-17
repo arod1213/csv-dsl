@@ -37,6 +37,12 @@
   optional: true
   type: String
 
+- name: licensor
+  aliases:
+    - Licensor
+  optional: true
+  type: String
+
 - name: isrc
   aliases:
     - ISRC
@@ -62,3 +68,5 @@
    - Territory
   optional: true
   type: Country
+
+# type Country is essentially a string but serializes country codes to name

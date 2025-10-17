@@ -85,13 +85,25 @@ fn validate_field(field: &str, spec: &FieldSpec) -> Option<Value> {
     }
 }
 
+#[derive(Debug)]
+pub struct FieldInfo {
+    field_name: String,
+    field_type: DataType,
+    value: String,
+}
+
+#[derive(Debug)]
+pub enum ParseError {
+    BadField(FieldInfo),
+    // MissingField(String),
+}
 // TODO: return optional type and remove invalid entries from schema
 pub fn csv_line_to_payment(
     line: &str,
     sep: &str,
     headers: &Vec<String>,
     schema: &HashMap<String, FieldSpec>,
-) -> Option<Value> {
+) -> Result<Value, ParseError> {
     let mut obj = Map::new();
 
     let fields = collect_fields(line, sep);
@@ -104,10 +116,16 @@ pub fn csv_line_to_payment(
         };
         let value = match validate_field(field, spec) {
             Some(x) => x,
-            _ => return None,
+            _ => {
+                return Err(ParseError::BadField(FieldInfo {
+                    value: field.to_string(),
+                    field_name: spec.name.clone(),
+                    field_type: spec.r#type.clone(),
+                }));
+            }
         };
         obj.insert(spec.name.to_string(), value);
     }
 
-    Some(Value::Object(obj))
+    Ok(Value::Object(obj))
 }
