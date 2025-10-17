@@ -31,7 +31,7 @@ fn main() {
         let headers = collect_fields(&line, &args.separator);
 
         let mut statements: Vec<Value> = vec![];
-        let yaml_schema = yaml_schema();
+        let yaml_schema = yaml_schema(&args.schema);
         loop {
             let line = match read_line(&mut reader) {
                 Some(s) => s,
