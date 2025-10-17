@@ -47,7 +47,7 @@ fn main() {
                     if args.strict {
                         match e {
                             ParseError::BadField(s) => {
-                                panic!("bad field in {:?} at {}: {:?}", name, line_num, s);
+                                eprintln!("bad field in {:?} at {}: {:?}", name, line_num, s);
                             } // _ => panic!("{:?}", e),
                         }
                     }
@@ -59,6 +59,8 @@ fn main() {
             statements.push(obj);
         }
         let json = Value::from(statements);
-        println!("{}", serde_json::to_string_pretty(&json).unwrap());
+        if !args.strict {
+            println!("{}", serde_json::to_string_pretty(&json).unwrap());
+        }
     }
 }
