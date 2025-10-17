@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use serde_json::{Map, Number, Value};
 
 use crate::{
-    country::parse_country_code,
+    parse::yaml::{DataType, FieldSpec},
+    types::country::parse_country_code,
     utils::clean_line,
-    yaml::{DataType, FieldSpec},
 };
 
 pub fn collect_fields(line: &str, sep: &str) -> Vec<String> {

@@ -3,17 +3,18 @@ use serde_json::Value;
 use std::{fs::File, io::BufReader};
 
 mod cli;
-mod country;
-mod csv;
+mod parse;
 mod read;
+mod types;
 mod utils;
-mod yaml;
 
 use crate::{
     cli::Args,
-    csv::{collect_fields, csv_line_to_payment},
+    parse::{
+        csv::{collect_fields, csv_line_to_payment},
+        yaml::yaml_schema,
+    },
     read::{get_path, read_line},
-    yaml::yaml_schema,
 };
 
 fn main() {
