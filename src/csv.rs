@@ -84,6 +84,9 @@ fn validate_field(field: &str, spec: &FieldSpec) -> Option<Value> {
             if spec.optional && field == "" {
                 return Some(Value::Null);
             }
+            if field == "" {
+                return None;
+            }
             return Some(Value::String(field.to_string()));
         }
         "float" => {
