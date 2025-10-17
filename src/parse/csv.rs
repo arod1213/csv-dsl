@@ -3,15 +3,13 @@ use std::collections::HashMap;
 use serde_json::{Map, Number, Value};
 
 use crate::{
-    parse::yaml::{DataType, FieldSpec},
+    parse::{
+        field::collect_fields,
+        yaml::{DataType, FieldSpec},
+    },
     types::country::parse_country_code,
     utils::clean_line,
 };
-
-pub fn collect_fields(line: &str, sep: &str) -> Vec<String> {
-    let fields: Vec<String> = line.split(sep).map(|x| clean_line(x).to_string()).collect();
-    fields
-}
 
 fn validate_field(field: &str, spec: &FieldSpec) -> Option<Value> {
     match spec.r#type {
@@ -100,7 +98,7 @@ pub enum ParseError {
 // TODO: return optional type and remove invalid entries from schema
 pub fn csv_line_to_payment(
     line: &str,
-    sep: &str,
+    sep: &char,
     headers: &Vec<String>,
     schema: &HashMap<String, FieldSpec>,
 ) -> Result<Value, ParseError> {

@@ -11,7 +11,8 @@ mod utils;
 use crate::{
     cli::Args,
     parse::{
-        csv::{ParseError, collect_fields, csv_line_to_payment},
+        csv::{ParseError, csv_line_to_payment},
+        field::collect_fields,
         yaml::yaml_schema,
     },
     read::{get_path, read_line},
