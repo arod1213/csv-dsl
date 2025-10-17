@@ -1,0 +1,27 @@
+- name: title
+  aliases: [ "Work Title", "Title" ]
+  optional: false
+  type: string
+
+- name: earnings
+  aliases: [ "USD Amount", "$ Amount", "Amount" ]
+  optional: false
+  type: float
+
+- name: artist
+  aliases: [ "Performing Artist", "Artist" ]
+  type: string
+
+- name: isrc
+  aliases: [ "ISRC" ]
+  type: string
+
+- name: upc
+  aliases: [ "UPC", "Album UPC" ]
+  optional: true
+  type: uint
+
+- name: territory
+  aliases: [ "Territory" ]
+  optional: true
+  type: string
