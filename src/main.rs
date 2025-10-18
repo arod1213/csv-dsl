@@ -28,7 +28,6 @@ fn read_csv<'a, R: Read + 'a>(input: R, name: &str, args: &Args) {
 
     let mut parser = CSVParser::new(&mut reader, &schema, &args.separator);
 
-    let mut statements: Vec<Value> = vec![];
     let mut line_num: usize = 0;
     loop {
         let obj = match parser.next() {
@@ -54,11 +53,9 @@ fn read_csv<'a, R: Read + 'a>(input: R, name: &str, args: &Args) {
             }
         };
         line_num += 1;
-        statements.push(obj);
-    }
-    let json = Value::from(statements);
-    if !args.strict {
-        println!("{}", serde_json::to_string_pretty(&json).unwrap());
+        if !args.strict {
+            println!("{}", obj);
+        }
     }
 }
 
