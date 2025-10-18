@@ -13,7 +13,7 @@ use crate::{
     parse::{
         csv::{ParseError, csv_line_to_payment},
         field::collect_fields,
-        yaml::yaml_schema,
+        yaml::Schema,
     },
     read::{get_path, read_line},
 };
@@ -34,7 +34,7 @@ fn main() {
         let headers = collect_fields(&line, &args.separator);
 
         let mut statements: Vec<Value> = vec![];
-        let yaml_schema = yaml_schema(&args.schema);
+        let yaml_schema = Schema::new(&args.schema);
 
         let mut line_num: usize = 0;
         loop {
@@ -49,7 +49,10 @@ fn main() {
                         match e {
                             ParseError::BadField(s) => {
                                 eprintln!("bad field in {:?} at {}: {:?}", name, line_num, s);
-                            } // _ => panic!("{:?}", e),
+                            }
+                            ParseError::MissingField(s) => {
+                                eprintln!("missing field in {:?} at {}: {:?}", name, line_num, s);
+                            }
                         }
                     }
                     line_num += 1;

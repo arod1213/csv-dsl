@@ -24,6 +24,7 @@
 - name: date
   aliases:
     - Distribution Date
+    - start_date
     - Transaction Date
   type: Date
   optional: true
@@ -46,6 +47,7 @@
 - name: isrc
   aliases:
     - ISRC
+    - isrc
   type: String
 
 - name: iswc

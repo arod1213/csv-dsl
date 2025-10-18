@@ -5,7 +5,7 @@ use serde_json::{Map, Number, Value};
 use crate::{
     parse::{
         field::collect_fields,
-        yaml::{DataType, FieldSpec},
+        yaml::{DataType, FieldSpec, Schema},
     },
     types::country::parse_country_code,
     utils::clean_line,
@@ -93,14 +93,14 @@ pub struct FieldInfo {
 #[derive(Debug)]
 pub enum ParseError {
     BadField(FieldInfo),
-    // MissingField(String),
+    MissingField(String),
 }
 // TODO: return optional type and remove invalid entries from schema
 pub fn csv_line_to_payment(
     line: &str,
     sep: &char,
     headers: &Vec<String>,
-    schema: &HashMap<String, FieldSpec>,
+    schema: &Schema,
 ) -> Result<Value, ParseError> {
     let mut obj = Map::new();
 
@@ -108,7 +108,7 @@ pub fn csv_line_to_payment(
 
     // TODO: potentially loop over spec to ensure all fields are present
     for (header, field) in headers.iter().zip(&fields) {
-        let spec = match schema.get(header) {
+        let spec = match schema.alias_to_name.get(header) {
             Some(s) => s,
             None => continue,
         };
@@ -123,6 +123,20 @@ pub fn csv_line_to_payment(
             }
         };
         obj.insert(spec.name.to_string(), value);
+    }
+
+    let missing: Vec<&FieldSpec> = schema
+        .specs
+        .iter()
+        .filter(|s| !obj.get(&s.name).is_some())
+        .collect();
+    for field in missing.iter() {
+        if field.optional {
+            obj.insert(field.name.to_string(), Value::Null);
+            continue;
+        } else {
+            return Err(ParseError::MissingField(field.name.to_string()));
+        }
     }
 
     Ok(Value::Object(obj))
