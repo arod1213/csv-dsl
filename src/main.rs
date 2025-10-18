@@ -1,6 +1,9 @@
 use clap::Parser;
 use serde_json::Value;
-use std::{fs::File, io::BufReader};
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+};
 
 mod cli;
 mod parse;
@@ -17,15 +20,11 @@ use crate::{
     read::get_path,
 };
 
-fn read_file(name: &str, args: &Args) {
-    let path = match get_path(name) {
-        Some(s) => s,
-        None => return,
-    };
-
+fn read_csv<'a, R: Read + 'a>(input: R, name: &str, args: &Args) {
     let schema = Schema::new(&args.schema);
-    let file = File::open(path).expect("could not open csv");
-    let mut reader = BufReader::new(file);
+
+    // TODO: extract separator from file extension;
+    let mut reader = BufReader::new(input);
 
     let mut parser = CSVParser::new(&mut reader, &schema, &args.separator);
 
@@ -67,6 +66,11 @@ fn main() {
     let args = Args::parse();
 
     for name in &args.filepaths {
-        read_file(name, &args);
+        let path = match get_path(name) {
+            Some(s) => s,
+            None => return,
+        };
+        let file = File::open(path).expect("could not open csv");
+        read_csv(file, name, &args);
     }
 }
