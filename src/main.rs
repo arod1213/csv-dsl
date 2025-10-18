@@ -1,5 +1,4 @@
 use clap::Parser;
-use serde_json::Value;
 use std::{
     fs::File,
     io::{BufReader, Read},

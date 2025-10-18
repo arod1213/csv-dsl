@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::format, fs::File, io::BufReader};
+use std::{collections::HashMap, fs::File, io::BufReader};
 
 use serde::Deserialize;
 use serde_json::Value;
@@ -41,7 +41,6 @@ impl FieldSpec {
         self.default_value = match self.get_default(def) {
             Some(x) => Some(x),
             None => {
-                let msg = format!("invalid default {} expected type {:?}", def, self.r#type);
                 panic!("invalid default {} expected type {:?}", def, self.r#type);
             }
         };
