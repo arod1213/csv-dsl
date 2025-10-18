@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use serde_json::{Map, Number, Value};
+use std::io::{BufRead, BufReader, Read};
 
 use crate::{
     parse::{
@@ -8,7 +7,6 @@ use crate::{
         yaml::{DataType, FieldSpec, Schema},
     },
     types::country::parse_country_code,
-    utils::clean_line,
 };
 
 fn validate_field(field: &str, spec: &FieldSpec) -> Option<Value> {
@@ -94,50 +92,84 @@ pub struct FieldInfo {
 pub enum ParseError {
     BadField(FieldInfo),
     MissingField(String),
+    EOF,
 }
-// TODO: return optional type and remove invalid entries from schema
-pub fn csv_line_to_payment(
-    line: &str,
-    sep: &char,
-    headers: &Vec<String>,
-    schema: &Schema,
-) -> Result<Value, ParseError> {
-    let mut obj = Map::new();
 
-    let fields = collect_fields(line, sep);
+pub struct CSVParser<'a, R: std::io::Read + 'a> {
+    reader: &'a mut BufReader<R>,
+    schema: &'a Schema,
+    headers: Vec<String>,
+    sep: &'a char,
+}
 
-    // TODO: potentially loop over spec to ensure all fields are present
-    for (header, field) in headers.iter().zip(&fields) {
-        let spec = match schema.alias_to_name.get(header) {
-            Some(s) => s,
-            None => continue,
-        };
-        let value = match validate_field(field, spec) {
-            Some(x) => x,
-            _ => {
-                return Err(ParseError::BadField(FieldInfo {
-                    value: field.to_string(),
-                    field_name: spec.name.clone(),
-                    field_type: spec.r#type.clone(),
-                }));
-            }
-        };
-        obj.insert(spec.name.to_string(), value);
-    }
+impl<'a, R: Read> CSVParser<'a, R> {
+    pub fn new(reader: &'a mut BufReader<R>, schema: &'a Schema, sep: &'a char) -> Self {
+        let line = CSVParser::read_line(reader).unwrap();
+        let headers = collect_fields(&line, &sep);
 
-    let missing: Vec<&FieldSpec> = schema
-        .specs
-        .iter()
-        .filter(|s| !obj.get(&s.name).is_some())
-        .collect();
-    for field in missing.iter() {
-        if field.optional {
-            obj.insert(field.name.to_string(), Value::Null);
-            continue;
-        } else {
-            return Err(ParseError::MissingField(field.name.to_string()));
+        CSVParser {
+            reader,
+            schema,
+            headers,
+            sep,
         }
     }
+    fn read_line(reader: &mut BufReader<R>) -> Option<String> {
+        let mut buf: String = "".to_string();
+        let byte_count = match reader.read_line(&mut buf) {
+            Ok(x) if x == 0 => return None,
+            Ok(x) => x,
+            Err(_) => return None,
+        };
+        Some(buf[0..byte_count].to_string())
+    }
 
-    Ok(Value::Object(obj))
+    fn next_line(&mut self) -> Option<String> {
+        Self::read_line(self.reader)
+    }
+
+    pub fn next(&mut self) -> Result<Value, ParseError> {
+        let line = match self.next_line() {
+            Some(x) => x,
+            None => return Err(ParseError::EOF),
+        };
+
+        let mut obj = Map::new();
+
+        let fields = collect_fields(&line, self.sep);
+        for (header, field) in self.headers.iter().zip(&fields) {
+            let spec = match self.schema.alias_to_name.get(header) {
+                Some(s) => s,
+                None => continue,
+            };
+            let value = match validate_field(field, spec) {
+                Some(x) => x,
+                _ => {
+                    return Err(ParseError::BadField(FieldInfo {
+                        value: field.to_string(),
+                        field_name: spec.name.clone(),
+                        field_type: spec.r#type.clone(),
+                    }));
+                }
+            };
+            obj.insert(spec.name.to_string(), value);
+        }
+
+        let missing: Vec<&FieldSpec> = self
+            .schema
+            .specs
+            .iter()
+            .filter(|s| !obj.get(&s.name).is_some())
+            .collect();
+        for field in missing.iter() {
+            if field.optional {
+                obj.insert(field.name.to_string(), Value::Null);
+                continue;
+            } else {
+                return Err(ParseError::MissingField(field.name.to_string()));
+            }
+        }
+
+        Ok(Value::Object(obj))
+    }
 }

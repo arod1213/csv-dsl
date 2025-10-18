@@ -49,6 +49,7 @@
     - ISRC
     - isrc
   type: String
+  optional: true
 
 - name: iswc
   aliases: 

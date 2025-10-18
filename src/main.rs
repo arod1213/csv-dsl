@@ -11,60 +11,62 @@ mod utils;
 use crate::{
     cli::Args,
     parse::{
-        csv::{ParseError, csv_line_to_payment},
-        field::collect_fields,
+        csv::{CSVParser, ParseError},
         yaml::Schema,
     },
-    read::{get_path, read_line},
+    read::get_path,
 };
+
+fn read_file(name: &str, args: &Args) {
+    let path = match get_path(name) {
+        Some(s) => s,
+        None => return,
+    };
+
+    let schema = Schema::new(&args.schema);
+    let file = File::open(path).expect("could not open csv");
+    let mut reader = BufReader::new(file);
+
+    let mut parser = CSVParser::new(&mut reader, &schema, &args.separator);
+
+    let mut statements: Vec<Value> = vec![];
+    let mut line_num: usize = 0;
+    loop {
+        let obj = match parser.next() {
+            Ok(x) => x,
+            Err(e) => {
+                if let ParseError::EOF = e {
+                    break;
+                }
+
+                if args.strict {
+                    match e {
+                        ParseError::BadField(s) => {
+                            eprintln!("bad field in {:?} at {}: {:?}", name, line_num, s);
+                        }
+                        ParseError::MissingField(s) => {
+                            eprintln!("missing field in {:?} at {}: {:?}", name, line_num, s);
+                        }
+                        _ => (),
+                    }
+                }
+                line_num += 1;
+                continue;
+            }
+        };
+        line_num += 1;
+        statements.push(obj);
+    }
+    let json = Value::from(statements);
+    if !args.strict {
+        println!("{}", serde_json::to_string_pretty(&json).unwrap());
+    }
+}
 
 fn main() {
     let args = Args::parse();
 
     for name in &args.filepaths {
-        let path = match get_path(name) {
-            Some(s) => s,
-            None => continue,
-        };
-
-        let file = File::open(path).expect("could not open csv");
-        let mut reader = BufReader::new(file);
-
-        let line = read_line(&mut reader).unwrap();
-        let headers = collect_fields(&line, &args.separator);
-
-        let mut statements: Vec<Value> = vec![];
-        let yaml_schema = Schema::new(&args.schema);
-
-        let mut line_num: usize = 0;
-        loop {
-            let line = match read_line(&mut reader) {
-                Some(s) => s,
-                None => break,
-            };
-            let obj = match csv_line_to_payment(&line, &args.separator, &headers, &yaml_schema) {
-                Ok(x) => x,
-                Err(e) => {
-                    if args.strict {
-                        match e {
-                            ParseError::BadField(s) => {
-                                eprintln!("bad field in {:?} at {}: {:?}", name, line_num, s);
-                            }
-                            ParseError::MissingField(s) => {
-                                eprintln!("missing field in {:?} at {}: {:?}", name, line_num, s);
-                            }
-                        }
-                    }
-                    line_num += 1;
-                    continue;
-                }
-            };
-            line_num += 1;
-            statements.push(obj);
-        }
-        let json = Value::from(statements);
-        if !args.strict {
-            println!("{}", serde_json::to_string_pretty(&json).unwrap());
-        }
+        read_file(name, &args);
     }
 }
