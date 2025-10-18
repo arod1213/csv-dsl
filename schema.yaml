@@ -5,6 +5,7 @@
     - song_name
     - Work Primary Title
     - Track Name
+  default: N/A
   optional: false
   type: String
 

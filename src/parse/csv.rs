@@ -1,85 +1,11 @@
-use serde_json::{Map, Number, Value};
+use serde_json::{Map, Value};
 use std::io::{BufRead, BufReader, Read};
 
-use crate::{
-    parse::{
-        field::collect_fields,
-        yaml::{DataType, FieldSpec, Schema},
-    },
-    types::country::parse_country_code,
+use crate::parse::{
+    field::collect_fields,
+    validate::validate_field,
+    yaml::{DataType, FieldSpec, Schema},
 };
-
-fn validate_field(field: &str, spec: &FieldSpec) -> Option<Value> {
-    match spec.r#type {
-        DataType::Country => {
-            let country_name = parse_country_code(field);
-            return Some(Value::String(country_name));
-        }
-        // TODO: provide a more robust format to parse by (01-01-01) would fail atm
-        DataType::Date => {
-            let fixed = field.replace("-", "/");
-            let date = match dateparser::parse(&fixed) {
-                Ok(x) => x,
-                Err(_) => {
-                    if spec.optional {
-                        return Some(Value::Null);
-                    }
-                    return None;
-                }
-            };
-            return Some(Value::String(date.to_string()));
-        }
-        DataType::String => {
-            if spec.optional && field == "" {
-                return Some(Value::Null);
-            }
-            if field == "" {
-                return None;
-            }
-            return Some(Value::String(field.to_string()));
-        }
-        DataType::Float => {
-            let num = match field.parse::<f64>() {
-                Ok(x) => x,
-                Err(_) => {
-                    if spec.optional {
-                        return Some(Value::Null);
-                    }
-                    return None;
-                }
-            };
-            let num = Number::from_f64(num).unwrap();
-            return Some(Value::Number(num));
-        }
-        DataType::Int => {
-            let num = match field.parse::<i128>() {
-                Ok(x) => x,
-                Err(_) => {
-                    if spec.optional {
-                        return Some(Value::Null);
-                    }
-                    return None;
-                }
-            };
-            let num = Number::from_i128(num).unwrap();
-            return Some(Value::Number(num));
-        }
-        DataType::Uint => {
-            let num = match field.parse::<u128>() {
-                Ok(x) => x,
-                Err(_) => {
-                    if spec.optional {
-                        return Some(Value::Null);
-                    }
-                    return None;
-                }
-            };
-            let num = Number::from_u128(num).unwrap();
-            return Some(Value::Number(num));
-        }
-        _ => return None,
-    }
-}
 
 #[derive(Debug)]
 pub struct FieldInfo {
@@ -142,16 +68,11 @@ impl<'a, R: Read> CSVParser<'a, R> {
                 Some(s) => s,
                 None => continue,
             };
-            let value = match validate_field(field, spec) {
-                Some(x) => x,
-                _ => {
-                    return Err(ParseError::BadField(FieldInfo {
-                        value: field.to_string(),
-                        field_name: spec.name.clone(),
-                        field_type: spec.r#type.clone(),
-                    }));
-                }
-            };
+
+            let value = validate_field(field, spec)
+                .or_else(|| spec.default_value.clone())
+                .ok_or_else(|| ParseError::MissingField(spec.name.clone()))?;
+
             obj.insert(spec.name.to_string(), value);
         }
 
